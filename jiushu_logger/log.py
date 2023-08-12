@@ -5,7 +5,7 @@ import typing
 from dataclasses import dataclass, fields
 from enum import Enum
 
-from _helpers import safely_jsonify
+from ._helpers import safely_jsonify
 
 __all__ = ['Logger', 'BizLogExtra', 'ReqLogExtra', 'CallLogExtra',
            'CronLogExtra', 'MiddlewareLogExtra', 'MqLogExtra',
