@@ -2,7 +2,7 @@
 import logging
 from unittest import TestCase
 
-from log import *
+from jiushu_logger.log import *
 
 
 class TestLogging(TestCase):
