@@ -5,6 +5,8 @@ import typing
 from dataclasses import dataclass, fields
 from enum import Enum
 
+from _helpers import safely_jsonify
+
 __all__ = ['Logger', 'BizLogExtra', 'ReqLogExtra', 'CallLogExtra',
            'CronLogExtra', 'MiddlewareLogExtra', 'MqLogExtra',
            'CallType', 'MiddlewareType', 'MqType', 'MqHandleType']
@@ -108,11 +110,15 @@ class CallType(Enum):
 @dataclass
 class CallLogExtra(BizLogExtra):
     cate: CallType = None
-    call_params: str = None
-    call_resp: str = None
+    call_params: typing.Union[str, typing.Mapping] = None
+    call_resp: typing.Union[str, typing.Mapping] = None
 
     def __post_init__(self):
         assert self.cate and self.cate in CallType
+        if self.call_params is not None:
+            self.call_params = safely_jsonify(self.call_params)
+        if self.call_resp is not None:
+            self.call_resp = safely_jsonify(self.call_resp)
 
 
 @dataclass
