@@ -1,7 +1,7 @@
 # coding: utf-8
 from .log import *
 
-__version__ = '0.1.1'
+__version__ = '1.0.0'
 
 __all__ = ['Logger', 'BizLogExtra', 'ReqLogExtra', 'CallLogExtra',
            'CronLogExtra', 'MiddlewareLogExtra', 'MqLogExtra',
