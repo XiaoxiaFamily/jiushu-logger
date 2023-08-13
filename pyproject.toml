@@ -1,0 +1,29 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "jiushu_logger"
+authors = [
+    { name = "Ai Tutu", email = "zhixiao.yang0124@gmail.com" },
+]
+description = "A logger with standardized format for JF."
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.7"
+classifiers = [
+    "License :: OSI Approved :: The Unlicense (Unlicense)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: System :: Logging",
+    "Typing :: Typed",
+]
+dynamic = ["version"]
+
+dependencies = [
+    "orjson >=3.8.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/XiaoxiaFamily/jiushu-logger"
+"Bug Tracker" = "https://github.com/XiaoxiaFamily/jiushu-logger/issues"
