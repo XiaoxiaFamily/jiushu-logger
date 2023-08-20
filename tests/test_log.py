@@ -16,6 +16,7 @@ class TestLogging(TestCase):
         records = captured.records
         self.assertEqual(len(records), 4)
         self.assertTrue(all(record.name == 'jf_service_biz' for record in records))
+        self.assertTrue(all(record.cate == 'biz' for record in records))
 
         self.assertIsNone(records[0].trace_id)
         self.assertIsNone(records[0].duration)
@@ -46,6 +47,7 @@ class TestLogging(TestCase):
         records = captured.records
         self.assertEqual(len(records), 2)
         self.assertTrue(all(record.name == 'jf_service_req' for record in records))
+        self.assertTrue(all(record.cate == 'req' for record in records))
 
         self.assertIsNone(records[0].method)
         self.assertIsNone(records[0].path)
@@ -77,15 +79,15 @@ class TestLogging(TestCase):
         self.assertEqual(len(records), 3)
         self.assertTrue(all(record.name == 'jf_service_call' for record in records))
 
-        self.assertEqual(records[0].cate, CallType.INTERN)
+        self.assertEqual(records[0].cate, str(CallType.INTERN))
         self.assertIsNone(records[0].call_params)
         self.assertIsNone(records[0].call_resp)
 
-        self.assertEqual(records[1].cate, CallType.EXTERN)
+        self.assertEqual(records[1].cate, str(CallType.EXTERN))
         self.assertIsNone(records[1].call_params)
         self.assertIsNone(records[1].call_resp)
 
-        self.assertEqual(records[2].cate, CallType.INTERN)
+        self.assertEqual(records[2].cate, str(CallType.INTERN))
         self.assertEqual(records[2].call_params, '{"i1":"iv1"}')
         self.assertEqual(records[2].call_resp, '{"o1":"ov1","o2":"ov2"}')
 
@@ -100,6 +102,7 @@ class TestLogging(TestCase):
         records = captured.records
         self.assertEqual(len(records), 2)
         self.assertTrue(all(record.name == 'jf_service_cron' for record in records))
+        self.assertTrue(all(record.cate == 'cron' for record in records))
 
         self.assertIsNone(records[0].job_group)
         self.assertIsNone(records[0].job_code)
@@ -119,14 +122,14 @@ class TestLogging(TestCase):
         self.assertEqual(len(records), 5)
         self.assertTrue(all(record.name == 'jf_service_middleware' for record in records))
 
-        self.assertEqual(records[0].cate, MiddlewareType.MYSQL)
+        self.assertEqual(records[0].cate, str(MiddlewareType.MYSQL))
         self.assertIsNone(records[0].host)
 
-        self.assertEqual(records[1].cate, MiddlewareType.MONGO)
+        self.assertEqual(records[1].cate, str(MiddlewareType.MONGO))
 
-        self.assertEqual(records[2].cate, MiddlewareType.REDIS)
+        self.assertEqual(records[2].cate, str(MiddlewareType.REDIS))
 
-        self.assertEqual(records[3].cate, MiddlewareType.ES)
+        self.assertEqual(records[3].cate, str(MiddlewareType.ES))
 
         self.assertEqual(records[4].host, '1.2.3.4')
 
@@ -145,13 +148,13 @@ class TestLogging(TestCase):
         self.assertEqual(len(records), 5)
         self.assertTrue(all(record.name == 'jf_service_mq' for record in records))
 
-        self.assertEqual(records[0].cate, MqType.MQ)
+        self.assertEqual(records[0].cate, str(MqType.MQ))
 
-        self.assertEqual(records[1].cate, MqType.MQTT)
+        self.assertEqual(records[1].cate, str(MqType.MQTT))
 
-        self.assertEqual(records[2].cate, MqType.KAFKA)
+        self.assertEqual(records[2].cate, str(MqType.KAFKA))
 
-        self.assertEqual(records[3].cate, MqType.KAFKA)
+        self.assertEqual(records[3].cate, str(MqType.KAFKA))
         self.assertEqual(records[3].handle, MqHandleType.SEND)
 
         self.assertEqual(records[4].handle, MqHandleType.LISTEN)

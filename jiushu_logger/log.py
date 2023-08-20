@@ -16,7 +16,7 @@ logging.addLevelName(logging.WARNING, 'WARN')
 
 # Base log format
 _base_format = ('level: [%(levelname)s], '
-                'cate: [biz], '
+                'cate: [%(cate)s], '
                 'traceId: [%(trace_id)s], '
                 'timestamp: [%(created)d%(msecs)03d], '
                 'duration: [%(duration)s], '
@@ -70,10 +70,12 @@ class Logger:
 # ----- 业务日志 -----
 @dataclass
 class BizLogExtra(typing.Mapping):
+    cate: str = 'biz'
     trace_id: str = None
     duration: typing.Union[int, float] = None
 
     def __post_init__(self):
+        assert self.cate == 'biz'
         if self.duration is not None:
             self.duration = int(self.duration * 1000)  # s -> ms
 
@@ -89,6 +91,7 @@ class BizLogExtra(typing.Mapping):
 
 @dataclass
 class ReqLogExtra(BizLogExtra):
+    cate: str = 'req'
     method: str = None
     path: str = None
     client_ip: str = None
@@ -97,6 +100,9 @@ class ReqLogExtra(BizLogExtra):
     query: str = None
     body: str = None
     resp: str = None
+
+    def __post_init__(self):
+        assert self.cate == 'req'
 
 
 class CallType(Enum):
@@ -109,12 +115,13 @@ class CallType(Enum):
 
 @dataclass
 class CallLogExtra(BizLogExtra):
-    cate: CallType = None
+    cate: typing.Union[str, CallType] = None
     call_params: typing.Union[str, typing.Mapping] = None
     call_resp: typing.Union[str, typing.Mapping] = None
 
     def __post_init__(self):
         assert self.cate and self.cate in CallType
+        self.cate = str(self.cate)
         if self.call_params is not None:
             self.call_params = safely_jsonify(self.call_params)
         if self.call_resp is not None:
@@ -123,8 +130,12 @@ class CallLogExtra(BizLogExtra):
 
 @dataclass
 class CronLogExtra(BizLogExtra):
+    cate: str = 'cron'
     job_group: str = None
     job_code: str = None
+
+    def __post_init__(self):
+        assert self.cate == 'cron'
 
 
 class MiddlewareType(Enum):
@@ -139,11 +150,12 @@ class MiddlewareType(Enum):
 
 @dataclass
 class MiddlewareLogExtra(BizLogExtra):
-    cate: MiddlewareType = None
+    cate: typing.Union[str, MiddlewareType] = None
     host: str = None
 
     def __post_init__(self):
         assert self.cate and self.cate in MiddlewareType
+        self.cate = str(self.cate)
 
 
 class MqType(Enum):
@@ -165,9 +177,10 @@ class MqHandleType(Enum):
 
 @dataclass
 class MqLogExtra(BizLogExtra):
-    cate: MqType = None
+    cate: typing.Union[str, MqType] = None
     handle: MqHandleType = None
 
     def __post_init__(self):
         assert self.cate and self.cate in MqType
         assert self.handle and self.handle in MqHandleType
+        self.cate = str(self.cate)
