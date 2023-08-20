@@ -35,7 +35,8 @@ class TestLogging(TestCase):
     def test_req_logging(self):
         with self.assertLogs(Logger.req, level=logging.DEBUG) as captured:
             Logger.req.info('req info', extra=ReqLogExtra())
-            Logger.req.info('req info', extra=ReqLogExtra(method='GET',
+            Logger.req.info('req info', extra=ReqLogExtra(duration=1.23456,
+                                                          method='GET',
                                                           path='/path',
                                                           client_ip='1.2.3.4',
                                                           host='5.6.7.8',
@@ -58,6 +59,8 @@ class TestLogging(TestCase):
         self.assertIsNone(records[0].body)
         self.assertIsNone(records[0].resp)
 
+        self.assertTrue(isinstance(records[1].duration, int))
+        self.assertEqual(records[1].duration, 1234)
         self.assertEqual(records[1].method, 'GET')
         self.assertEqual(records[1].path, '/path')
         self.assertEqual(records[1].client_ip, '1.2.3.4')

@@ -103,6 +103,8 @@ class ReqLogExtra(BizLogExtra):
 
     def __post_init__(self):
         assert self.cate == 'req'
+        if self.duration is not None:
+            self.duration = int(self.duration * 1000)  # s -> ms
 
 
 class CallType(Enum):
@@ -126,6 +128,8 @@ class CallLogExtra(BizLogExtra):
             self.call_params = safely_jsonify(self.call_params)
         if self.call_resp is not None:
             self.call_resp = safely_jsonify(self.call_resp)
+        if self.duration is not None:
+            self.duration = int(self.duration * 1000)  # s -> ms
 
 
 @dataclass
@@ -136,6 +140,8 @@ class CronLogExtra(BizLogExtra):
 
     def __post_init__(self):
         assert self.cate == 'cron'
+        if self.duration is not None:
+            self.duration = int(self.duration * 1000)  # s -> ms
 
 
 class MiddlewareType(Enum):
@@ -156,6 +162,8 @@ class MiddlewareLogExtra(BizLogExtra):
     def __post_init__(self):
         assert self.cate and self.cate in MiddlewareType
         self.cate = str(self.cate)
+        if self.duration is not None:
+            self.duration = int(self.duration * 1000)  # s -> ms
 
 
 class MqType(Enum):
@@ -184,3 +192,5 @@ class MqLogExtra(BizLogExtra):
         assert self.cate and self.cate in MqType
         assert self.handle and self.handle in MqHandleType
         self.cate = str(self.cate)
+        if self.duration is not None:
+            self.duration = int(self.duration * 1000)  # s -> ms
