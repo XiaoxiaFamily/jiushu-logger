@@ -1,8 +1,10 @@
 # coding: utf-8
+from .helpers import *
 from .log import *
 
-__version__ = '1.0.3'
+__version__ = '1.0.4'
 
-__all__ = ['Logger', 'BizLogExtra', 'ReqLogExtra', 'CallLogExtra',
+__all__ = ['safely_jsonify',
+           'Logger', 'BizLogExtra', 'ReqLogExtra', 'CallLogExtra',
            'CronLogExtra', 'MiddlewareLogExtra', 'MqLogExtra',
            'CallType', 'MiddlewareType', 'MqType', 'MqHandleType']
