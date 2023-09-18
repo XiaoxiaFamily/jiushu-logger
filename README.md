@@ -30,18 +30,19 @@ from jiushu_logger import *
 Logger.biz.info('一个biz日志', extra=BizLogExtra(trace_id='xxx', duration=123.456))
 
 # call 日志分为 INTERN 、 EXTERN 两种
-Logger.call.warning('call警告', extra=CallLogExtra(cate=CallType.INTERN, call_params={'input': 'value1'},
-                                                   call_resp={'output': 'value2'}))
-Logger.call.warning('call警告', extra=CallLogExtra(cate=CallType.INTERN, call_params={'input': 'value1'},
-                                                   call_resp={'output': 'value2'}))
+Logger.call.warning('call警告', extra=CallLogExtra(type=CallType.EXTERN, params={'input': 'value1'},
+                                                   resp={'output': 'value2'}))
+Logger.call.warning('call警告', extra=CallLogExtra(type=CallType.EXTERN, params={'input': 'value1'},
+                                                   resp={'output': 'value2'}))
 
 # cron 日志适用于 xxl-job
 Logger.cron.error('cron错误', extra=CronLogExtra(job_group='group', job_code='code'))
 
 # middleware 日志分为 MYSQL 、 MONGO 、 REDIS 、 ES
-Logger.middleware.debug('middleware调试', extra=MiddlewareLogExtra(cate=MiddlewareType.REDIS, host='x.x.x.x'))
+Logger.middleware.debug('middleware调试',
+                        extra=MiddlewareLogExtra(type=MiddlewareType.REDIS, host='x.x.x.x'))
 
 # mq 日志分为 mq 、 mqtt 、 kafka , handle 分为 send 、 listen
-Logger.middleware.info('', extra=MqLogExtra(cate=MqType.KAFKA, handle=MqHandleType.LISTEN))
-Logger.middleware.info('', extra=MqLogExtra(cate=MqType.MQ, handle=MqHandleType.SEND))
+Logger.middleware.info('', extra=MqLogExtra(type=MqType.KAFKA, handle_type=MqHandleType.LISTEN))
+Logger.middleware.info('', extra=MqLogExtra(type=MqType.MQ, handle_type=MqHandleType.SEND))
 ```

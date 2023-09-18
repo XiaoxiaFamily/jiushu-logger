@@ -72,30 +72,27 @@ class TestLogging(TestCase):
 
     def test_call_logging(self):
         with self.assertLogs(Logger.call, level=logging.DEBUG) as captured:
-            Logger.call.info('call info', extra=CallLogExtra(cate=CallType.INTERN))
-            Logger.call.info('call info', extra=CallLogExtra(cate=CallType.EXTERN))
-            Logger.call.info('call info', extra=CallLogExtra(cate=CallType.INTERN,
-                                                             call_params={'i1': 'iv1'},
-                                                             call_resp={'o1': 'ov1', 'o2': 'ov2'}))
+            Logger.call.info('call info', extra=CallLogExtra(type=CallType.INTERN))
+            Logger.call.info('call info', extra=CallLogExtra(type=CallType.EXTERN))
+            Logger.call.info('call info', extra=CallLogExtra(type=CallType.INTERN,
+                                                             params={'i1': 'iv1'},
+                                                             resp={'o1': 'ov1', 'o2': 'ov2'}))
 
         records = captured.records
         self.assertEqual(len(records), 3)
         self.assertTrue(all(record.name == 'jf_service_call' for record in records))
 
-        self.assertEqual(records[0].cate, str(CallType.INTERN))
+        self.assertEqual(records[0].cate, CallType.INTERN.value)
         self.assertIsNone(records[0].call_params)
         self.assertIsNone(records[0].call_resp)
 
-        self.assertEqual(records[1].cate, str(CallType.EXTERN))
+        self.assertEqual(records[1].cate, CallType.EXTERN.value)
         self.assertIsNone(records[1].call_params)
         self.assertIsNone(records[1].call_resp)
 
-        self.assertEqual(records[2].cate, str(CallType.INTERN))
+        self.assertEqual(records[2].cate, CallType.INTERN.value)
         self.assertEqual(records[2].call_params, '{"i1":"iv1"}')
         self.assertEqual(records[2].call_resp, '{"o1":"ov1","o2":"ov2"}')
-
-        with self.assertRaises(AssertionError):
-            Logger.call.info('assert error', extra=CallLogExtra())
 
     def test_cron_logging(self):
         with self.assertLogs(Logger.cron, level=logging.DEBUG) as captured:
@@ -115,55 +112,47 @@ class TestLogging(TestCase):
 
     def test_middleware_logging(self):
         with self.assertLogs(Logger.middleware, level=logging.DEBUG) as captured:
-            Logger.middleware.info('middleware info', extra=MiddlewareLogExtra(cate=MiddlewareType.MYSQL))
-            Logger.middleware.info('middleware info', extra=MiddlewareLogExtra(cate=MiddlewareType.MONGO))
-            Logger.middleware.info('middleware info', extra=MiddlewareLogExtra(cate=MiddlewareType.REDIS))
-            Logger.middleware.info('middleware info', extra=MiddlewareLogExtra(cate=MiddlewareType.ES))
-            Logger.middleware.info('middleware info', extra=MiddlewareLogExtra(cate=MiddlewareType.ES, host='1.2.3.4'))
+            Logger.middleware.info('middleware info', extra=MiddlewareLogExtra(type=MiddlewareType.MYSQL))
+            Logger.middleware.info('middleware info', extra=MiddlewareLogExtra(type=MiddlewareType.MONGO))
+            Logger.middleware.info('middleware info', extra=MiddlewareLogExtra(type=MiddlewareType.REDIS))
+            Logger.middleware.info('middleware info', extra=MiddlewareLogExtra(type=MiddlewareType.ES))
+            Logger.middleware.info('middleware info',
+                                   extra=MiddlewareLogExtra(type=MiddlewareType.ES, host='1.2.3.4'))
 
         records = captured.records
         self.assertEqual(len(records), 5)
         self.assertTrue(all(record.name == 'jf_service_middleware' for record in records))
 
-        self.assertEqual(records[0].cate, str(MiddlewareType.MYSQL))
+        self.assertEqual(records[0].cate, MiddlewareType.MYSQL.value)
         self.assertIsNone(records[0].host)
 
-        self.assertEqual(records[1].cate, str(MiddlewareType.MONGO))
+        self.assertEqual(records[1].cate, MiddlewareType.MONGO.value)
 
-        self.assertEqual(records[2].cate, str(MiddlewareType.REDIS))
+        self.assertEqual(records[2].cate, MiddlewareType.REDIS.value)
 
-        self.assertEqual(records[3].cate, str(MiddlewareType.ES))
+        self.assertEqual(records[3].cate, MiddlewareType.ES.value)
 
         self.assertEqual(records[4].host, '1.2.3.4')
 
-        with self.assertRaises(AssertionError):
-            Logger.middleware.info('assert error', extra=MiddlewareLogExtra())
-
     def test_mq_logging(self):
         with self.assertLogs(Logger.mq, level=logging.DEBUG) as captured:
-            Logger.mq.info('mq info', extra=MqLogExtra(cate=MqType.MQ, handle=MqHandleType.SEND))
-            Logger.mq.info('mq info', extra=MqLogExtra(cate=MqType.MQTT, handle=MqHandleType.SEND))
-            Logger.mq.info('mq info', extra=MqLogExtra(cate=MqType.KAFKA, handle=MqHandleType.SEND))
-            Logger.mq.info('mq info', extra=MqLogExtra(cate=MqType.KAFKA, handle=MqHandleType.SEND))
-            Logger.mq.info('mq info', extra=MqLogExtra(cate=MqType.KAFKA, handle=MqHandleType.LISTEN))
+            Logger.mq.info('mq info', extra=MqLogExtra(type=MqType.MQ, handle_type=MqHandleType.SEND))
+            Logger.mq.info('mq info', extra=MqLogExtra(type=MqType.MQTT, handle_type=MqHandleType.SEND))
+            Logger.mq.info('mq info', extra=MqLogExtra(type=MqType.KAFKA, handle_type=MqHandleType.SEND))
+            Logger.mq.info('mq info', extra=MqLogExtra(type=MqType.KAFKA, handle_type=MqHandleType.SEND))
+            Logger.mq.info('mq info', extra=MqLogExtra(type=MqType.KAFKA, handle_type=MqHandleType.LISTEN))
 
         records = captured.records
         self.assertEqual(len(records), 5)
         self.assertTrue(all(record.name == 'jf_service_mq' for record in records))
 
-        self.assertEqual(records[0].cate, str(MqType.MQ))
+        self.assertEqual(records[0].cate, MqType.MQ.value)
 
-        self.assertEqual(records[1].cate, str(MqType.MQTT))
+        self.assertEqual(records[1].cate, MqType.MQTT.value)
 
-        self.assertEqual(records[2].cate, str(MqType.KAFKA))
+        self.assertEqual(records[2].cate, MqType.KAFKA.value)
 
-        self.assertEqual(records[3].cate, str(MqType.KAFKA))
-        self.assertEqual(records[3].handle, MqHandleType.SEND)
+        self.assertEqual(records[3].cate, MqType.KAFKA.value)
+        self.assertEqual(records[3].handle, MqHandleType.SEND.value)
 
-        self.assertEqual(records[4].handle, MqHandleType.LISTEN)
-
-        with self.assertRaises(AssertionError):
-            Logger.call.info('assert error', extra=MqLogExtra(handle=MqHandleType.SEND))
-
-        with self.assertRaises(AssertionError):
-            Logger.call.info('assert error', extra=MqLogExtra(cate=MqType.MQ))
+        self.assertEqual(records[4].handle, MqHandleType.LISTEN.value)

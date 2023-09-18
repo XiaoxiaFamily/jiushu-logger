@@ -2,10 +2,9 @@
 import logging
 import sys
 import typing
-from dataclasses import dataclass, fields
 from enum import Enum
 
-from ._helpers import safely_jsonify
+from .helpers import safely_jsonify
 
 __all__ = ['Logger', 'BizLogExtra', 'ReqLogExtra', 'CallLogExtra',
            'CronLogExtra', 'MiddlewareLogExtra', 'MqLogExtra',
@@ -57,140 +56,117 @@ def _init_logger(cate: str, fmt: str):
     return logger
 
 
-@dataclass(init=False, repr=False, eq=False, frozen=True)
 class Logger:
-    biz: typing.ClassVar = _init_logger('biz', _biz_format)
-    req: typing.ClassVar = _init_logger('req', _req_format)
-    call: typing.ClassVar = _init_logger('call', _call_format)
-    cron: typing.ClassVar = _init_logger('cron', _cron_format)
-    middleware: typing.ClassVar = _init_logger('middleware', _middleware_format)
-    mq: typing.ClassVar = _init_logger('mq', _mq_format)
+    biz = _init_logger('biz', _biz_format)
+    req = _init_logger('req', _req_format)
+    call = _init_logger('call', _call_format)
+    cron = _init_logger('cron', _cron_format)
+    middleware = _init_logger('middleware', _middleware_format)
+    mq = _init_logger('mq', _mq_format)
 
 
-# ----- 业务日志 -----
-@dataclass
-class BizLogExtra(typing.Mapping):
-    cate: str = 'biz'
-    trace_id: str = None
-    duration: typing.Union[int, float] = None
-
-    def __post_init__(self):
-        assert self.cate == 'biz'
-        if self.duration is not None:
-            self.duration = int(self.duration * 1000)  # s -> ms
+class _BaseLogExtra(typing.Mapping):
+    def __init__(self, trace_id: str, duration: float):
+        self.trace_id = trace_id
+        self.duration = (int(duration * 1000)
+                         if duration is not None
+                         else None)  # Convert seconds to milliseconds
 
     def __getitem__(self, field_name):
         return getattr(self, field_name)
 
     def __len__(self) -> int:
-        return len(fields(self))
+        return len(self.__dict__)
 
     def __iter__(self):
-        yield from (field.name for field in fields(self))
+        yield from (key for key in self.__dict__)
 
 
-@dataclass
-class ReqLogExtra(BizLogExtra):
-    cate: str = 'req'
-    method: str = None
-    path: str = None
-    client_ip: str = None
-    host: str = None
-    headers: str = None
-    query: str = None
-    body: str = None
-    resp: str = None
-
-    def __post_init__(self):
-        assert self.cate == 'req'
-        if self.duration is not None:
-            self.duration = int(self.duration * 1000)  # s -> ms
+# ----- 业务日志 -----
+class BizLogExtra(_BaseLogExtra):
+    def __init__(self, trace_id: str = None, duration: float = None):
+        super().__init__(trace_id, duration)
+        self.cate = 'biz'
 
 
+# ----- 请求日志 -----
+class ReqLogExtra(_BaseLogExtra):
+    def __init__(self,
+                 trace_id: str = None, duration: float = None,
+                 method: str = None, path: str = None, client_ip: str = None, host: str = None,
+                 headers: str = None, query: str = None, body: str = None, resp: str = None):
+        super().__init__(trace_id, duration)
+        self.cate = 'req'
+        self.method = method
+        self.path = path
+        self.client_ip = client_ip
+        self.host = host
+        self.headers = headers
+        self.query = query
+        self.body = body
+        self.resp = resp
+
+
+# ----- 调用日志 -----
 class CallType(Enum):
     INTERN = 'internalCall'
     EXTERN = 'externalCall'
 
-    def __repr__(self):
-        return self.value
+
+class CallLogExtra(_BaseLogExtra):
+    def __init__(self,
+                 trace_id: str = None, duration: float = None,
+                 type: CallType = CallType.INTERN, params: typing.Mapping = None, resp: typing.Mapping = None):
+        super().__init__(trace_id, duration)
+        self.cate = type.value
+        self.call_params = safely_jsonify(params) if params is not None else None
+        self.call_resp = safely_jsonify(resp) if resp is not None else None
 
 
-@dataclass
-class CallLogExtra(BizLogExtra):
-    cate: typing.Union[str, CallType] = None
-    call_params: typing.Union[str, typing.Mapping] = None
-    call_resp: typing.Union[str, typing.Mapping] = None
-
-    def __post_init__(self):
-        assert self.cate and self.cate in CallType
-        self.cate = str(self.cate)
-        if self.call_params is not None:
-            self.call_params = safely_jsonify(self.call_params)
-        if self.call_resp is not None:
-            self.call_resp = safely_jsonify(self.call_resp)
-        if self.duration is not None:
-            self.duration = int(self.duration * 1000)  # s -> ms
+# ----- 计划任务日志 -----
+class CronLogExtra(_BaseLogExtra):
+    def __init__(self,
+                 trace_id: str = None, duration: float = None,
+                 job_group: str = None, job_code: str = None):
+        super().__init__(trace_id, duration)
+        self.cate = 'cron'
+        self.job_group = job_group
+        self.job_code = job_code
 
 
-@dataclass
-class CronLogExtra(BizLogExtra):
-    cate: str = 'cron'
-    job_group: str = None
-    job_code: str = None
-
-    def __post_init__(self):
-        assert self.cate == 'cron'
-        if self.duration is not None:
-            self.duration = int(self.duration * 1000)  # s -> ms
-
-
+# ----- 中间件日志 -----
 class MiddlewareType(Enum):
     MYSQL = 'mysql'
     MONGO = 'mongo'
     REDIS = 'redis'
     ES = 'es'
 
-    def __repr__(self):
-        return self.value
+
+class MiddlewareLogExtra(_BaseLogExtra):
+    def __init__(self,
+                 trace_id: str = None, duration: float = None,
+                 type: MiddlewareType = MiddlewareType.MYSQL, host: str = None):
+        super().__init__(trace_id, duration)
+        self.cate = type.value
+        self.host = host
 
 
-@dataclass
-class MiddlewareLogExtra(BizLogExtra):
-    cate: typing.Union[str, MiddlewareType] = None
-    host: str = None
-
-    def __post_init__(self):
-        assert self.cate and self.cate in MiddlewareType
-        self.cate = str(self.cate)
-        if self.duration is not None:
-            self.duration = int(self.duration * 1000)  # s -> ms
-
-
+# ----- 对列日志 -----
 class MqType(Enum):
     MQ = 'mq'
     MQTT = 'mqtt'
     KAFKA = 'kafka'
-
-    def __repr__(self):
-        return self.value
 
 
 class MqHandleType(Enum):
     SEND = 'send'
     LISTEN = 'listen'
 
-    def __repr__(self):
-        return self.value
 
-
-@dataclass
-class MqLogExtra(BizLogExtra):
-    cate: typing.Union[str, MqType] = None
-    handle: MqHandleType = None
-
-    def __post_init__(self):
-        assert self.cate and self.cate in MqType
-        assert self.handle and self.handle in MqHandleType
-        self.cate = str(self.cate)
-        if self.duration is not None:
-            self.duration = int(self.duration * 1000)  # s -> ms
+class MqLogExtra(_BaseLogExtra):
+    def __init__(self,
+                 trace_id: str = None, duration: float = None,
+                 type: MqType = MqType.MQ, handle_type: MqHandleType = MqHandleType.LISTEN):
+        super().__init__(trace_id, duration)
+        self.cate = type.value
+        self.handle = handle_type.value
