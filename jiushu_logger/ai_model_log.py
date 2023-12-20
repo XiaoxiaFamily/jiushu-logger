@@ -18,7 +18,11 @@ class AiModelLogSdk:
         Constructor.
         :param url: Endpoint of the logging API.
         """
-        self.__url = url
+        self._url = url
+        self._do_send = self._check_do_send()
+
+    def _check_do_send(self) -> bool:
+        return bool(self._url)
 
     def send(self,
              trace_id: str,
@@ -29,7 +33,7 @@ class AiModelLogSdk:
              duration: float,
              status: int = 0,
              error_msg: str = "",
-             ) -> bool:
+             ) -> Any:
         """
         Send log message.
 
@@ -44,8 +48,11 @@ class AiModelLogSdk:
         :return: True for success, False for failure.
         """
 
+        if not self._do_send:
+            return {'message': 'SEND_CANCELED'}
+
         try:
-            resp = httpx.post(self.__url,
+            resp = httpx.post(self._url,
                               json={
                                   'traceId': trace_id,
                                   'name': name,
@@ -58,7 +65,10 @@ class AiModelLogSdk:
                                   'busTime': int(time() * 1000)
                               },
                               timeout=httpx.Timeout(5.))
-            return resp.status_code == HTTPStatus.OK
+            if resp.status_code == HTTPStatus.OK and resp.json():
+                return {'message': 'OK'}
 
-        except BaseException as e:
-            return False
+        except BaseException:
+            pass
+
+        return {'message': 'API_ERROR'}
